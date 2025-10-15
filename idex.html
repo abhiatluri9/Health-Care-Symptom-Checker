@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🩺 Healthcare Symptom Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f0f9ff, #cceeff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      max-width: 550px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #0077b6;
+    }
+
+    .category {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .category h3 {
+      margin-bottom: 10px;
+      color: #023e8a;
+    }
+
+    .symptom-item {
+      margin: 5px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .symptom-item input {
+      margin-right: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      resize: vertical;
+    }
+
+    button {
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005f8e;
+    }
+
+    #resultCard {
+      margin-top: 30px;
+      background-color: #e0f7ff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    #resultCard h2 {
+      margin-top: 0;
+      color: #0077b6;
+    }
+
+    .result-section {
+      margin-bottom: 15px;
+    }
+
+    .result-section strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .result-section ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🩺 Symptom Checker</h1>
+    <form id="symptomForm">
+      <div class="category">
+        <h3>🫁 Respiratory</h3>
+        <label class="symptom-item"><input type="checkbox" value="cold"> 🤧 Cold</label>
+        <label class="symptom-item"><input type="checkbox" value="cough"> 😮‍💨 Cough</label>
+        <label class="symptom-item"><input type="checkbox" value="sore throat"> 😫 Sore Throat</label>
+      </div>
+
+      <div class="category">
+        <h3>🧠 General</h3>
+        <label class="symptom-item"><input type="checkbox" value="fever"> 🌡️ Fever</label>
+        <label class="symptom-item"><input type="checkbox" value="headache"> 🤕 Headache</label>
+        <label class="symptom-item"><input type="checkbox" value="nausea"> 🤢 Nausea</label>
+      </div>
+
+      <div class="category">
+        <h3>🍽️ Digestive</h3>
+        <label class="symptom-item"><input type="checkbox" value="stomach pain"> 🤰 Stomach Pain</label>
+        <label class="symptom-item"><input type="checkbox" value="loose motion"> 🚽 Loose Motion</label>
+        <label class="symptom-item"><input type="checkbox" value="vomiting"> 🤮 Vomiting</label>
+        <label class="symptom-item"><input type="checkbox" value="abdominal pain"> 🫃 Abdominal Pain</label>
+      </div>
+
+      <div class="category">
+        <h3>📝 Describe Your Symptoms</h3>
+        <textarea id="freeText" rows="4" placeholder="e.g., I have a headache and feel dizzy..."></textarea>
+      </div>
+
+      <button type="submit">🔍 Analyze Symptoms</button>
+    </form>
+
+    <div id="resultCard" style="display:none;">
+      <h2>🧾 Results</h2>
+      <div class="result-section">
+        <strong>🩺 Possible Conditions:</strong>
+        <ul id="conditionsList"></ul>
+      </div>
+      <div class="result-section">
+        <strong>💡 Recommendations:</strong>
+        <ul id="recommendationsList"></ul>
+      </div>
+      <div class="result-section">
+        <strong>⚠️ Disclaimer:</strong>
+        <p id="disclaimerText"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("symptomForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const selected = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+      const typed = document.getElementById("freeText").value.trim();
+      const combined = [...selected, typed].filter(Boolean).join(", ");
+
+      if (!combined) {
+        alert("Please select or describe at least one symptom.");
+        return;
+      }
+
+      const res = await fetch("/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: combined })
+      });
+
+      const data = await res.json();
+      document.getElementById("resultCard").style.display = "block";
+      document.getElementById("conditionsList").innerHTML = data.conditions.map(c => `<li>${c}</li>`).join("");
+      document.getElementById("recommendationsList").innerHTML = data.recommendations.map(r => `<li>${r}</li>`).join("");
+      document.getElementById("disclaimerText").innerText = data.disclaimer;
+    };
+  </script>
+</body>
+</html>
